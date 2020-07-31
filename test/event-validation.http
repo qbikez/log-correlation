@@ -1,5 +1,5 @@
-POST http://15bbbd703e62.ngrok.io/events
-# POST http://localhost:5003/events
+# POST http://15bbbd703e62.ngrok.io/events
+POST http://localhost:5003/events
 aeg-event-type: SubscriptionValidation
 Content-Type: application/json
 
@@ -8,7 +8,8 @@ Content-Type: application/json
   "topic": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "subject": "",
   "data": {
-    "validationCode": "512d38b6-c7b8-40c8-89fe-f46f9e9622b6"
+    "validationCode": "512d38b6-c7b8-40c8-89fe-f46f9e9622b6",
+    "traceparent": "00-a9e9973d5879534ea56e841dba313415-06510af5916c3545-00"
   },
   "eventType": "Microsoft.EventGrid.SubscriptionValidationEvent",
   "eventTime": "2018-01-25T22:12:19.4556811Z",

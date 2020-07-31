@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace shipping
 {
@@ -18,26 +20,26 @@ namespace shipping
         {
             this.log = log;
         }
-        
+
         public async Task Handle(HttpContext context, Func<EventGridEvent, Task> callback)
         {
-            log.LogInformation($"C# HTTP trigger function began");
             string response = string.Empty;
 
             using var reader = new StreamReader(context.Request.Body);
             var requestContent = await reader.ReadToEndAsync();
-            log.LogInformation($"Received events: {requestContent}");
+            log.LogDebug($"Received events: {requestContent}");
 
             EventGridSubscriber eventGridSubscriber = new EventGridSubscriber();
 
-            EventGridEvent[] eventGridEvents = eventGridSubscriber.DeserializeEventGridEvents(requestContent);
+            EventGridEvent[] eventGridEvents = JsonConvert.DeserializeObject<EventGridEvent[]>(requestContent);
 
             var validationEvent = eventGridEvents.FirstOrDefault(e => e.Data is SubscriptionValidationEventData);
 
             if (validationEvent != null)
             {
+                SetOperationId(context, validationEvent);
                 var result = HandleValidation(validationEvent);
-                
+
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(JsonConvert.SerializeObject(result));
 
@@ -46,10 +48,47 @@ namespace shipping
 
             foreach (EventGridEvent eventGridEvent in eventGridEvents)
             {
-                await callback(eventGridEvent);
+                InActivityContext(context, eventGridEvent, callback);
             }
 
             context.Response.StatusCode = 202;
+        }
+
+        private static void InActivityContext(HttpContext context, EventGridEvent eventGridEvent, Func<EventGridEvent, Task> callback)
+        {
+            Activity activity = new Activity($"{eventGridEvent.EventType} {eventGridEvent.Subject}");
+            SetOperationId(context, eventGridEvent, activity);
+            try
+            {
+                callback(eventGridEvent);
+            }
+            finally
+            {
+                activity.Stop();
+            }
+        }
+
+        private static void SetOperationId(HttpContext context, EventGridEvent eventGridEvent, Activity activity = null)
+        {
+            try
+            {
+                string operationId = null;
+                if (((JObject)eventGridEvent.Data).TryGetValue("traceparent", out var traceParentValue))
+                {
+                    operationId = traceParentValue.Value<string>();
+                }
+
+                if (!string.IsNullOrEmpty(operationId))
+                {
+                    context.Items["OperationId"] = operationId;
+
+                    activity?.SetParentId(operationId);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private object HandleValidation(EventGridEvent validationEvent)

@@ -1,0 +1,2 @@
+GET http://localhost:5003/echo
+MyOperationId: 00-a9e9973d5879534ea56e841dba313415-06510af5916c3545-00
