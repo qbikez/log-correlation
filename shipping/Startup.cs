@@ -38,7 +38,7 @@ namespace shipping
                     var handler = new EventGridHandler(loggerFactory.CreateLogger<EventGridHandler>());
                     await handler.Handle(context, async gridEvent => {
                         var logger = loggerFactory.CreateLogger<Startup>();
-                        logger.LogInformation($"received grid event: {JsonConvert.SerializeObject(gridEvent)}");
+                        // logger.LogInformation($"received grid event: {JsonConvert.SerializeObject(gridEvent)}");
                         
                         await Task.Yield();
                     });

@@ -9,6 +9,7 @@ using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
+using Newtonsoft.Json.Linq;
 
 namespace orders_backend.Controllers
 {
@@ -37,17 +38,25 @@ namespace orders_backend.Controllers
 
             var response = await warehouseClient.GetAsync("https://localhost:5002/items/");
             System.Console.WriteLine(config["EventGrid:Hostname"]);
-            var eventGrid = new EventGridClient(new TopicCredentials(config["EventGrid:Key"]));
+            using var eventGrid = new EventGridClient(new TopicCredentials(config["EventGrid:Key"]));
             await eventGrid.PublishEventsAsync(config["EventGrid:Hostname"], new List<EventGridEvent>() {
                 new EventGridEvent() {
                     Id = Guid.NewGuid().ToString(),
                     Topic = "orders",
-                    Data = new {
-                        Order = order
-                    },
+                    Data = JObject.FromObject(new {
+                        Order = order,
+                        Activity = new {
+                            RootId = System.Diagnostics.Activity.Current.RootId,
+                            Id = System.Diagnostics.Activity.Current.Id,
+                            ParentId = System.Diagnostics.Activity.Current.ParentId,
+                            ParentSpanId = System.Diagnostics.Activity.Current.ParentSpanId,
+                            SpanId = System.Diagnostics.Activity.Current.SpanId,
+                            TraceId = System.Diagnostics.Activity.Current.TraceId,
+                        }
+                    }),
                     EventType = "OrderAccepted",
                     Subject = $"orders/{order.Id}",
-                    DataVersion = "1.0.0"
+                    DataVersion = "1.0.1"
                 }
             });
             return Ok(order);
