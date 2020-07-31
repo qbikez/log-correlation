@@ -1,0 +1,26 @@
+{
+  "name": "log-correlation",
+  "version": "1.0.0",
+  "description": "A toy project to test Application Insights logs correlation.",
+  "main": "index.js",
+  "scripts": {
+    "start:orders": "dotnet run --project orders-backend",
+    "start:warehouse": "dotnet run --project warehouse",
+    "start:shipping": "dotnet run --project shipping",
+    "start": "concurrently -n orders,warehouse,shipping -c green,blue,magenta --kill-others \"npm run start:orders\" \"npm run start:warehouse\" \"npm run start:shipping\"",
+    "start:ngrok": "ngrok http -host-header=localhost 5003"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qbikez/log-correlation.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qbikez/log-correlation/issues"
+  },
+  "homepage": "https://github.com/qbikez/log-correlation#readme",
+  "devDependencies": {
+    "concurrently": "^5.2.0"
+  }
+}

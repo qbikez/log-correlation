@@ -1,0 +1,6 @@
+POST https://localhost:5001/orders
+Content-Type: application/json
+
+{
+    "items": ["a", "bunch", "of", "stuff"]
+}
