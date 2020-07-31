@@ -4,7 +4,7 @@
   "description": "A toy project to test Application Insights logs correlation.",
   "main": "index.js",
   "scripts": {
-    "start:orders": "dotnet run --project orders-backend",
+    "start:orders": "dotnet run --project orders",
     "start:warehouse": "dotnet run --project warehouse",
     "start:shipping": "dotnet run --project shipping",
     "start": "concurrently -n orders,warehouse,shipping -c green,blue,magenta --kill-others \"npm run start:orders\" \"npm run start:warehouse\" \"npm run start:shipping\"",

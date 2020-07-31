@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/orders-backend/bin/Debug/netcoreapp3.1/orders-backend.dll",
+            "program": "${workspaceFolder}/orders/bin/Debug/netcoreapp3.1/orders.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/orders-backend",
+            "cwd": "${workspaceFolder}/orders",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",
