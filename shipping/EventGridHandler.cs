@@ -58,12 +58,18 @@ namespace shipping
 
         private static async Task InActivityContext(HttpContext context, EventGridEvent eventGridEvent, Func<Task> callback)
         {
-            Activity activity = new Activity($"{eventGridEvent.EventType} {eventGridEvent.Subject}");
-            activity.SetParentId(GetOperationId(eventGridEvent));
-            activity.Start();
-            context.Items["Activity"] = activity;
-            var operation = context.Features.Get<RequestTelemetry>().Context.Operation;
-            MyTelemetryInitializer.SetOperationId(operation, activity);
+            Activity requestActivity = new Activity($"EVENT {eventGridEvent.EventType} {eventGridEvent.Subject}");
+            requestActivity.SetParentId(GetOperationId(eventGridEvent));
+            requestActivity.Start();
+
+            var requestTelemetry = context.Features.Get<RequestTelemetry>();
+            var operation = requestTelemetry.Context.Operation;
+            
+            requestTelemetry.Name = operation.Name;
+            operation.Name = requestActivity.OperationName;
+            requestTelemetry.Id = requestActivity.SpanId.ToHexString();            
+            operation.Id = requestActivity.TraceId.ToHexString();
+            operation.ParentId = requestActivity.ParentSpanId.ToHexString();
             
             try
             {
@@ -71,7 +77,7 @@ namespace shipping
             }
             finally
             {
-                activity.Stop();
+                requestActivity.Stop();
             }
         }
 

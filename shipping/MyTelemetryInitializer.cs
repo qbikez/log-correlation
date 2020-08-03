@@ -14,20 +14,15 @@ namespace shipping
 
         protected override void OnInitializeTelemetry(HttpContext platformContext, RequestTelemetry requestTelemetry, ITelemetry telemetry)
         {
-            if (platformContext.Items.TryGetValue("Activity", out var activityObj))
-            {
-                var activity = (Activity)activityObj;
-                var operation = requestTelemetry.Context.Operation;
+            //if (platformContext.Items.TryGetValue("Activity", out var activityObj))
+            //{
+            //    var activity = (Activity)activityObj;
+            //    var operation = requestTelemetry.Context.Operation;
 
-                SetOperationId(operation, activity);
-            }
+            //    SetOperationId(operation, activity);
+            //}
         }
 
-        public static void SetOperationId(OperationContext operation, Activity activity)
-        {
-            operation.Id = activity.TraceId.ToHexString();
-            operation.ParentId = activity.ParentSpanId.ToHexString();
-            operation.Name = activity.OperationName;
-        }
+       
     }
 }

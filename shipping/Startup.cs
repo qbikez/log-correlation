@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,7 @@ namespace shipping
                 opts.AddAutoCollectedMetricExtractor = false;
             });
             services.AddSingleton<ITelemetryInitializer, MyTelemetryInitializer>();
+            services.AddSingleton<ITelemetryInitializer>(new CloudRoleNameTelemetryInitializer("Shipping"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -119,6 +121,20 @@ namespace shipping
                     }));
                 });
             });
+        }
+    }
+
+    public class CloudRoleNameTelemetryInitializer : ITelemetryInitializer
+    {
+        public readonly string roleName;
+        public CloudRoleNameTelemetryInitializer(string roleName)
+        {
+            this.roleName = roleName;
+        }
+        public void Initialize(ITelemetry telemetry)
+        {
+            // set custom role name here
+            telemetry.Context.Cloud.RoleName = this.roleName;
         }
     }
 }

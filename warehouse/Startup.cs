@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +33,7 @@ namespace warehouse
                 opts.EnablePerformanceCounterCollectionModule = false;
                 opts.AddAutoCollectedMetricExtractor = false;
             });
+            services.AddSingleton<ITelemetryInitializer>(new CloudRoleNameTelemetryInitializer("Warehouse"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,6 +54,20 @@ namespace warehouse
             {
                 endpoints.MapControllers();
             });
+        }
+    }
+
+    public class CloudRoleNameTelemetryInitializer : ITelemetryInitializer
+    {
+        public readonly string roleName;
+        public CloudRoleNameTelemetryInitializer(string roleName)
+        {
+            this.roleName = roleName;
+        }
+        public void Initialize(ITelemetry telemetry)
+        {
+            // set custom role name here
+            telemetry.Context.Cloud.RoleName = this.roleName;
         }
     }
 }
