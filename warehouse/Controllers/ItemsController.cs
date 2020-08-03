@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,7 @@ namespace warehouse.Controllers
                         Topic = "items",
                         Data = JObject.FromObject(new
                         {
+                            traceparent = Activity.Current.Id,
                             ItemsAvailable = itemsAvailable,
                                 Activity = new
                                 {

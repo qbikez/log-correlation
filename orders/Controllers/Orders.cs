@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -33,7 +34,6 @@ namespace orders_backend.Controllers
         {
             order.Id = Guid.NewGuid();
 
-            // _logger.LogDebug($"received a new order: {order}");
             _logger.LogDebug("received a new order: {order}", order);
 
             var response = await warehouseClient.GetAsync("https://localhost:5002/items/");
@@ -45,13 +45,14 @@ namespace orders_backend.Controllers
                     Topic = "orders",
                     Data = JObject.FromObject(new {
                         Order = order,
+                        traceparent = Activity.Current.Id,
                         Activity = new {
-                            RootId = System.Diagnostics.Activity.Current.RootId,
-                            Id = System.Diagnostics.Activity.Current.Id,
-                            ParentId = System.Diagnostics.Activity.Current.ParentId,
-                            ParentSpanId = System.Diagnostics.Activity.Current.ParentSpanId,
-                            SpanId = System.Diagnostics.Activity.Current.SpanId,
-                            TraceId = System.Diagnostics.Activity.Current.TraceId,
+                            RootId = Activity.Current.RootId,
+                            Id = Activity.Current.Id,
+                            ParentId = Activity.Current.ParentId,
+                            ParentSpanId = Activity.Current.ParentSpanId,
+                            SpanId = Activity.Current.SpanId,
+                            TraceId = Activity.Current.TraceId,
                         }
                     }),
                     EventType = "OrderAccepted",

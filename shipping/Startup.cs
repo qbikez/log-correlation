@@ -7,10 +7,14 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.EventGrid;
+using Microsoft.Azure.EventGrid.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace shipping
 {
@@ -29,7 +33,7 @@ namespace shipping
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IConfiguration config)
         {
             if (env.IsDevelopment())
             {
@@ -44,14 +48,13 @@ namespace shipping
                 if (context.Request.Headers.ContainsKey("MyOperationId"))
                 {
                     var operationId = context.Request.Headers["MyOperationId"].ToString();
-                    context.Items["OperationId"] = operationId;
 
                     activity = new Activity(Activity.Current.OperationName);
                     activity.SetIdFormat(ActivityIdFormat.W3C);
                     activity.SetParentId(operationId);
 
                     activity.Start();
-                    System.Console.WriteLine(Activity.Current.Id);
+                    context.Items["Activity"] = activity;
                 }
                 try
                 {
@@ -70,7 +73,27 @@ namespace shipping
                     await handler.Handle(context, async gridEvent =>
                     {
                         var logger = loggerFactory.CreateLogger<Startup>();
-                        logger.LogInformation($"received grid event: {JsonConvert.SerializeObject(gridEvent)}");
+                        logger.LogInformation($"processing grid event: {JsonConvert.SerializeObject(gridEvent)}");
+                        if (gridEvent.EventType == "WarehouseDepleted")
+                        {
+                            logger.LogInformation("sending another event");
+                            using var eventGrid = new EventGridClient(new TopicCredentials(config["EventGrid:Key"]));
+                            await eventGrid.PublishEventsAsync(config["EventGrid:Hostname"], new List<EventGridEvent>()
+                            {
+                                new EventGridEvent()
+                                {
+                                    Id = Guid.NewGuid().ToString(),
+                                        Topic = "shipping",
+                                        Data = JObject.FromObject(new
+                                        {
+                                            traceparent = Activity.Current.Id,                                                
+                                        }),
+                                        EventType = "ItemShipped",
+                                        Subject = $"shipping",
+                                        DataVersion = "1.0.1"
+                                }
+                            });
+                        }
 
                         await Task.Yield();
                     });
