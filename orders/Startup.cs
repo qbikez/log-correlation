@@ -54,6 +54,11 @@ namespace orders_backend
 
             app.UseAuthorization();
 
+            app.Use(async (ctx, next) => {
+                ctx.Response.Headers.Add("Trace-Id", Activity.Current?.Id);
+                await next();
+            });
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

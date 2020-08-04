@@ -31,8 +31,9 @@ namespace shipping
                 opts.EnablePerformanceCounterCollectionModule = false;
                 opts.AddAutoCollectedMetricExtractor = false;
             });
-            services.AddSingleton<ITelemetryInitializer, MyTelemetryInitializer>();
+            // services.AddSingleton<ITelemetryInitializer, MyTelemetryInitializer>();
             services.AddSingleton<ITelemetryInitializer>(new CloudRoleNameTelemetryInitializer("Shipping"));
+            services.AddSingleton<ITelemetryInitializer>(new EventGridDependencyInitializer());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -89,7 +90,7 @@ namespace shipping
                                         Topic = "shipping",
                                         Data = JObject.FromObject(new
                                         {
-                                            traceparent = Activity.Current.TraceParent(),                                                
+                                            traceparent = Activity.Current.TraceParent(),
                                         }),
                                         EventType = "ItemShipped",
                                         Subject = $"shipping",
@@ -139,10 +140,9 @@ namespace shipping
         }
     }
 
-     public class EventGridDependencyInitializer : ITelemetryInitializer
+    public class EventGridDependencyInitializer : ITelemetryInitializer
     {
-        public EventGridDependencyInitializer()
-        { }
+        public EventGridDependencyInitializer() { }
         public void Initialize(ITelemetry telemetry)
         {
             if (telemetry is DependencyTelemetry)

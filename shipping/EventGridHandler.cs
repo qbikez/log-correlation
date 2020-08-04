@@ -38,7 +38,7 @@ namespace shipping
 
             if (validationEvent != null)
             {
-                await InActivityContext(context, validationEvent, async () =>
+                await InActivityContext(context, validationEvent, async() =>
                 {
                     var result = HandleValidation(validationEvent);
 
@@ -64,13 +64,13 @@ namespace shipping
 
             var requestTelemetry = context.Features.Get<RequestTelemetry>();
             var operation = requestTelemetry.Context.Operation;
-            
+
             requestTelemetry.Name = operation.Name;
             operation.Name = requestActivity.OperationName;
-            requestTelemetry.Id = requestActivity.SpanId.ToHexString();            
+            requestTelemetry.Id = requestActivity.SpanId.ToHexString();
             operation.Id = requestActivity.TraceId.ToHexString();
             operation.ParentId = requestActivity.ParentSpanId.ToHexString();
-            
+
             try
             {
                 await callback();
