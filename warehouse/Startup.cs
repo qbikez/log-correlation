@@ -87,6 +87,7 @@ namespace warehouse
                 var id = activity.GetBaggageItem("next_spanId");
                 if (!string.IsNullOrEmpty(id)) {
                     dependency.Id = id;
+                    dependency.Type = "Azure Service Bus";
                 }
             }
             

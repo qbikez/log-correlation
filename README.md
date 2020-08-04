@@ -202,3 +202,7 @@ There are some utilities that add possibility to have correlation between code t
 Observe end-to-end tracing:
 
 ![end-to-end trace with event correlation](example.png)
+
+# References
+
+[custom-operations-tracking](https://docs.microsoft.com/en-us/azure/azure-monitor/app/custom-operations-tracking)
