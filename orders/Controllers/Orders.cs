@@ -45,7 +45,7 @@ namespace orders_backend.Controllers
                     Topic = "orders",
                     Data = JObject.FromObject(new {
                         Order = order,
-                        traceparent = Activity.Current.Id,
+                        traceparent = Activity.Current.TraceParent(),
                         Activity = new {
                             RootId = Activity.Current.RootId,
                             Id = Activity.Current.Id,

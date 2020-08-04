@@ -46,7 +46,7 @@ namespace warehouse.Controllers
                         Topic = "items",
                         Data = JObject.FromObject(new
                         {
-                            traceparent = Activity.Current.Id,
+                            traceparent = Activity.Current.TraceParent(),
                             ItemsAvailable = itemsAvailable,
                                 Activity = new
                                 {

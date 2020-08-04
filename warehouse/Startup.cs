@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -34,6 +36,7 @@ namespace warehouse
                 opts.AddAutoCollectedMetricExtractor = false;
             });
             services.AddSingleton<ITelemetryInitializer>(new CloudRoleNameTelemetryInitializer("Warehouse"));
+            services.AddSingleton<ITelemetryInitializer>(new EventGridDependencyInitializer());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +71,25 @@ namespace warehouse
         {
             // set custom role name here
             telemetry.Context.Cloud.RoleName = this.roleName;
+        }
+    }
+
+    public class EventGridDependencyInitializer : ITelemetryInitializer
+    {
+        public EventGridDependencyInitializer()
+        {
+        }
+        public void Initialize(ITelemetry telemetry)
+        {
+            if (telemetry is DependencyTelemetry) {
+                var dependency = (telemetry as DependencyTelemetry);
+                var activity = Activity.Current;
+                var id = activity.GetBaggageItem("next_spanId");
+                if (!string.IsNullOrEmpty(id)) {
+                    dependency.Id = id;
+                }
+            }
+            
         }
     }
 }
