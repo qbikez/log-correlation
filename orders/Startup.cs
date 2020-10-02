@@ -54,7 +54,8 @@ namespace orders_backend
 
             app.UseAuthorization();
 
-            app.Use(async (ctx, next) => {
+            app.Use(async (ctx, next) =>
+            {
                 ctx.Response.Headers.Add("Trace-Id", Activity.Current?.Id);
                 await next();
             });
@@ -105,7 +106,7 @@ namespace orders_backend
     {
         public static string TraceParent(this Activity activity)
         {
-            if (activity?.SpanId == null || activity?.Id == null)return null;
+            if (activity?.SpanId == null || activity?.Id == null) return null;
 
             var nextSpanId = ActivitySpanId.CreateRandom().ToHexString();
             activity.AddBaggage("next_spanId", nextSpanId);
