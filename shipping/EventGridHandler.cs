@@ -11,106 +11,105 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace shipping
+namespace shipping;
+
+class EventGridHandler
 {
-    class EventGridHandler
+    private readonly ILogger log;
+
+    public EventGridHandler(ILogger log)
     {
-        private readonly ILogger log;
+        this.log = log;
+    }
 
-        public EventGridHandler(ILogger<EventGridHandler> log)
+    public async Task Handle(HttpContext context, Func<EventGridEvent, Task> callback)
+    {
+        string response = string.Empty;
+
+        using var reader = new StreamReader(context.Request.Body);
+        var requestContent = await reader.ReadToEndAsync();
+        log.LogDebug($"Received events: {requestContent}");
+
+        EventGridSubscriber eventGridSubscriber = new EventGridSubscriber();
+
+        EventGridEvent[] eventGridEvents = JsonConvert.DeserializeObject<EventGridEvent[]>(requestContent);
+
+        var validationEvent = eventGridEvents.FirstOrDefault(e => e.EventType == "Microsoft.EventGrid.SubscriptionValidationEvent");
+
+        if (validationEvent != null)
         {
-            this.log = log;
+            await InActivityContext(context, validationEvent, async() =>
+            {
+                var result = HandleValidation(validationEvent);
+
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonConvert.SerializeObject(result));
+            });
+            return;
         }
 
-        public async Task Handle(HttpContext context, Func<EventGridEvent, Task> callback)
+        foreach (EventGridEvent eventGridEvent in eventGridEvents)
         {
-            string response = string.Empty;
-
-            using var reader = new StreamReader(context.Request.Body);
-            var requestContent = await reader.ReadToEndAsync();
-            log.LogDebug($"Received events: {requestContent}");
-
-            EventGridSubscriber eventGridSubscriber = new EventGridSubscriber();
-
-            EventGridEvent[] eventGridEvents = JsonConvert.DeserializeObject<EventGridEvent[]>(requestContent);
-
-            var validationEvent = eventGridEvents.FirstOrDefault(e => e.EventType == "Microsoft.EventGrid.SubscriptionValidationEvent");
-
-            if (validationEvent != null)
-            {
-                await InActivityContext(context, validationEvent, async() =>
-                {
-                    var result = HandleValidation(validationEvent);
-
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(JsonConvert.SerializeObject(result));
-                });
-                return;
-            }
-
-            foreach (EventGridEvent eventGridEvent in eventGridEvents)
-            {
-                await InActivityContext(context, eventGridEvent, () => callback(eventGridEvent));
-            }
-
-            context.Response.StatusCode = 202;
+            await InActivityContext(context, eventGridEvent, () => callback(eventGridEvent));
         }
 
-        private static async Task InActivityContext(HttpContext context, EventGridEvent eventGridEvent, Func<Task> callback)
+        context.Response.StatusCode = 202;
+    }
+
+    private static async Task InActivityContext(HttpContext context, EventGridEvent eventGridEvent, Func<Task> callback)
+    {
+        var activity = new Activity($"EVENT {eventGridEvent.EventType} {eventGridEvent.Subject}");
+        activity.SetParentId(GetOperationId(eventGridEvent));
+        activity.Start();
+
+        var requestTelemetry = context.Features.Get<RequestTelemetry>();
+        
+        var operation = requestTelemetry.Context.Operation;
+        requestTelemetry.Name = operation.Name;
+        requestTelemetry.Id = activity.SpanId.ToHexString();
+        
+        operation.Name = activity.OperationName;
+        operation.Id = activity.TraceId.ToHexString();
+        operation.ParentId = activity.ParentSpanId.ToHexString();
+
+        try
         {
-            var activity = new Activity($"EVENT {eventGridEvent.EventType} {eventGridEvent.Subject}");
-            activity.SetParentId(GetOperationId(eventGridEvent));
-            activity.Start();
+            await callback();
+        }
+        finally
+        {
+            activity.Stop();
+        }
+    }
 
-            var requestTelemetry = context.Features.Get<RequestTelemetry>();
-            
-            var operation = requestTelemetry.Context.Operation;
-            requestTelemetry.Name = operation.Name;
-            requestTelemetry.Id = activity.SpanId.ToHexString();
-            
-            operation.Name = activity.OperationName;
-            operation.Id = activity.TraceId.ToHexString();
-            operation.ParentId = activity.ParentSpanId.ToHexString();
-
-            try
+    private static string GetOperationId(EventGridEvent eventGridEvent)
+    {
+        string operationId = null;
+        try
+        {
+            if (((JObject)eventGridEvent.Data).TryGetValue("traceparent", out var traceParentValue))
             {
-                await callback();
-            }
-            finally
-            {
-                activity.Stop();
+                operationId = traceParentValue.Value<string>();
             }
         }
-
-        private static string GetOperationId(EventGridEvent eventGridEvent)
+        catch
         {
-            string operationId = null;
-            try
-            {
-                if (((JObject)eventGridEvent.Data).TryGetValue("traceparent", out var traceParentValue))
-                {
-                    operationId = traceParentValue.Value<string>();
-                }
-            }
-            catch
-            {
-                // ignore
-            }
-            return operationId;
+            // ignore
         }
+        return operationId;
+    }
 
-        private object HandleValidation(EventGridEvent validationEvent)
+    private object HandleValidation(EventGridEvent validationEvent)
+    {
+        var eventData = ((JObject)validationEvent.Data).ToObject<SubscriptionValidationEventData>();
+        log.LogInformation($"Got SubscriptionValidation event data, validation code: {eventData.ValidationCode}, topic: {validationEvent.Topic}");
+        // Do any additional validation (as required) and then return back the below response
+
+        var responseData = new SubscriptionValidationResponse()
         {
-            var eventData = ((JObject)validationEvent.Data).ToObject<SubscriptionValidationEventData>();
-            log.LogInformation($"Got SubscriptionValidation event data, validation code: {eventData.ValidationCode}, topic: {validationEvent.Topic}");
-            // Do any additional validation (as required) and then return back the below response
+            ValidationResponse = eventData.ValidationCode
+        };
 
-            var responseData = new SubscriptionValidationResponse()
-            {
-                ValidationResponse = eventData.ValidationCode
-            };
-
-            return responseData;
-        }
+        return responseData;
     }
 }
