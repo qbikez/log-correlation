@@ -13,8 +13,9 @@ var _logger = app.Logger;
 var config = app.Configuration;
 
 app.MapGet("/", () => "This is WAREHOUSE service");
+app.MapGet("/warehouse/", () => "This is WAREHOUSE service");
 
-app.MapGet("/items", async (HttpRequest request) =>
+app.MapGet("/warehouse/items", async (HttpRequest request) =>
 {
     foreach (var header in request.Headers)
     {

@@ -63,6 +63,7 @@ class EventGridHandler
         activity.Start();
 
         var requestTelemetry = context.Features.Get<RequestTelemetry>();
+        if (requestTelemetry is null) throw new NullReferenceException("request telemetry is null. Did you configure app insights?")
         
         var operation = requestTelemetry.Context.Operation;
         requestTelemetry.Name = operation.Name;

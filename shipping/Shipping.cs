@@ -6,6 +6,8 @@ using Newtonsoft.Json.Linq;
 using shipping;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddApplicationInsightsTelemetry();
+
 var app = builder.Build();
 
 var logger = app.Logger;
@@ -36,10 +38,11 @@ app.Use(async (context, next) =>
 
     });
 
-app.MapGet("/", () => "This is SHIPPING service");
+app.MapGet("/shipping", () => "This is SHIPPING service");
 
-app.MapPost("/events", async (HttpContext context, ILoggerFactory loggerFactory) =>
+app.MapPost("/shipping/events", async (HttpContext context, ILoggerFactory loggerFactory) =>
     {
+        var telemetry = context.Features.Get<Microsoft.ApplicationInsights.DataContracts.RequestTelemetry>();
         var handler = new EventGridHandler(logger);
         await handler.Handle(context, async gridEvent =>
         {
@@ -69,7 +72,8 @@ app.MapPost("/events", async (HttpContext context, ILoggerFactory loggerFactory)
             await Task.Yield();
         });
     });
-app.MapGet("/echo", async context =>
+
+app.MapGet("/shipping/echo", async context =>
 {
     var activity = Activity.Current!;
     var headers = context.Request.Headers;
@@ -86,7 +90,7 @@ app.MapGet("/echo", async context =>
     context.Response.ContentType = "application/json";
     await context.Response.WriteAsync(JsonConvert.SerializeObject(new
     {
-        activityDump,
+        activity = activityDump,
         headers
     }));
 });

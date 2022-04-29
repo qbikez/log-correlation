@@ -9,25 +9,41 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/warehouse/bin/Debug/netcoreapp3.1/warehouse.dll",
+      "program": "${workspaceFolder}/warehouse/bin/Debug/net7.0/warehouse.dll",
       "args": [],
       "cwd": "${workspaceFolder}/warehouse",
       "stopAtEntry": false,
-      "console": "internalConsole"
+      "console": "internalConsole",
+      // "launchBrowser": {
+      //   "enabled": false
+      // }
+    },
+    {
+      "name": "orders",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/orders/bin/Debug/net7.0/orders.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/orders",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      // "launchBrowser": {
+      //   "enabled": false
+      // }
     },
     {
       "name": "shipping",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/shipping/bin/Debug/netcoreapp3.1/shipping.dll",
+      "program": "${workspaceFolder}/shipping/bin/Debug/net7.0/shipping.dll",
       "args": [],
       "cwd": "${workspaceFolder}/shipping",
       "stopAtEntry": false,
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-      },
+      // "serverReadyAction": {
+      //   "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      // },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -43,6 +59,12 @@
       "type": "coreclr",
       "request": "attach",
       "processId": "${command:azureFunctions.pickProcess}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch all",
+      "configurations": ["warehouse", "shipping", "orders"]
     }
   ]
 }

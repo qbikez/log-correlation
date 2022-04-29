@@ -1,5 +1,5 @@
 # POST http://15bbbd703e62.ngrok.io/events
-POST http://localhost:5003/events
+POST http://localhost:5003/shipping/events
 aeg-event-type: SubscriptionValidation
 Content-Type: application/json
 

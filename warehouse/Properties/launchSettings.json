@@ -11,8 +11,8 @@
     "warehouse": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:5002;",
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:5002/warehouse;",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
