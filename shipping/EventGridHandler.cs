@@ -24,6 +24,7 @@ class EventGridHandler
 
     public async Task Handle(HttpContext context, Func<EventGridEvent, Task> callback)
     {
+        var activity = Activity.Current;
         string response = string.Empty;
 
         using var reader = new StreamReader(context.Request.Body);
@@ -38,18 +39,19 @@ class EventGridHandler
 
         if (validationEvent != null)
         {
-            await InActivityContext(context, validationEvent, async () =>
-            {
+            //await InActivityContext(context, validationEvent, async () =>
+           // {
                 var result = HandleValidation(validationEvent);
 
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync(JsonConvert.SerializeObject(result));
-            });
+           // });
             return;
         }
 
         foreach (EventGridEvent eventGridEvent in eventGridEvents)
         {
+            log.LogDebug($"outside activity context: {requestContent}");
             await InActivityContext(context, eventGridEvent, () => callback(eventGridEvent));
         }
 
@@ -58,7 +60,7 @@ class EventGridHandler
 
     private static async Task InActivityContext(HttpContext context, EventGridEvent eventGridEvent, Func<Task> callback)
     {
-        var activity = new Activity($"EVENT {eventGridEvent.EventType} {eventGridEvent.Subject}");
+        using var activity = new Activity($"EVENT {eventGridEvent.EventType} {eventGridEvent.Subject}");
         activity.SetParentId(GetOperationId(eventGridEvent));
         activity.Start();
 

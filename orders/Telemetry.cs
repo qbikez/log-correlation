@@ -1,7 +1,6 @@
 
 
 using System.Diagnostics;
-
 using Microsoft.ApplicationInsights.AspNetCore.TelemetryInitializers;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -16,13 +15,10 @@ public class EventGridDependencyInitializer : ITelemetryInitializer
         if (telemetry is DependencyTelemetry dependency)
         {
             var activity = Activity.Current!;
-            // next_spanId is the spanId included in traceparent field inside the event
-            // this will make AppInsights think that handler request is child of this dependency call
             var id = activity.GetBaggageItem(NextSpanIdProperty);
             if (!string.IsNullOrEmpty(id))
             {
                 dependency.Id = id;
-                // "Azure Service Bus" is nicely interpreted in AppInsights graph
                 dependency.Type = "Azure Service Bus";
             }
         }
@@ -41,6 +37,8 @@ public static class ActivityExtensions
 
         var currentSpanId = activity.SpanId.ToHexString();
         var traceparent = activity.Id.Replace(currentSpanId, nextSpanId);
+
+        activity.AddBaggage("traceparent", traceparent);
 
         return traceparent;
     }

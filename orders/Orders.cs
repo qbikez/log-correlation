@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
 using Newtonsoft.Json.Linq;
@@ -7,6 +8,7 @@ using Newtonsoft.Json.Linq;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddSingleton<ITelemetryInitializer, EventGridDependencyInitializer>();
 
 var app = builder.Build();
 
@@ -21,6 +23,7 @@ app.Use(async (context, next) => {
 
 app.MapGet("/orders/", () => "This is ORDERS service");
 app.MapGet("/", () => "This is ORDERS service");
+app.MapGet("/orders/echo", () => "This is ORDERS echo");
 
 app.MapPost("/orders/", async (Order order) =>
 {
@@ -68,20 +71,4 @@ public class Order
 {
     public Guid Id { get; set; }
     public List<string> Items { get; set; }
-}
-
-public static class ActivityExtensions
-{
-    public static string? TraceParent(this Activity activity)
-    {
-        if (activity?.SpanId == null || activity?.Id == null) return null;
-
-        var nextSpanId = ActivitySpanId.CreateRandom().ToHexString();
-        activity.AddBaggage("next_spanId", nextSpanId);
-
-        var currentSpanId = activity.SpanId.ToHexString();
-        var traceparent = activity.Id.Replace(currentSpanId, nextSpanId);
-
-        return traceparent;
-    }
 }

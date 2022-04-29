@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
 using Newtonsoft.Json;
@@ -9,11 +10,13 @@ using shipping;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddSingleton<ITelemetryInitializer, EventGridDependencyInitializer>();
 
 var app = builder.Build();
 
 var logger = app.Logger;
 var config = app.Configuration;
+var client = new HttpClient();
 
 app.Use(async (context, next) => {
     if (context.Features.Get<RequestTelemetry>() is null) throw new Exception("RequestTelemetry Feature is missing. Did you forget to setup App Insights?");
@@ -46,6 +49,7 @@ app.Use(async (context, next) =>
     });
 
 app.MapGet("/shipping", () => "This is SHIPPING service");
+app.MapGet("/shipping/echo", () => "This is SHIPPING echo");
 
 app.MapPost("/shipping/events", async (HttpContext context, ILoggerFactory loggerFactory) =>
     {
@@ -54,6 +58,8 @@ app.MapPost("/shipping/events", async (HttpContext context, ILoggerFactory logge
         await handler.Handle(context, async gridEvent =>
         {
             logger.LogInformation($"processing grid event: {JsonConvert.SerializeObject(gridEvent)}");
+
+            var echoResponse = await client.GetAsync("https://localhost:5001/orders/echo");
 
             if (gridEvent.EventType == "WarehouseDepleted")
             {

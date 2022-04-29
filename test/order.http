@@ -1,7 +1,8 @@
-
 POST https://localhost:5001/orders
+TraceParent: 00-0cf7651916cd43dd8448eb211c80319c-0cf067aa0ba902b7-01
 Content-Type: application/json
 
 {
     "items": ["a", "bunch", "of", "stuff"]
 }   
+
