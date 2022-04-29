@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
 using Newtonsoft.Json;
@@ -6,12 +7,18 @@ using Newtonsoft.Json.Linq;
 using shipping;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddApplicationInsightsTelemetry();
 
 var app = builder.Build();
 
 var logger = app.Logger;
 var config = app.Configuration;
+
+app.Use(async (context, next) => {
+    if (context.Features.Get<RequestTelemetry>() is null) throw new Exception("RequestTelemetry Feature is missing. Did you forget to setup App Insights?");
+    await next();
+});
 
 app.Use(async (context, next) =>
     {

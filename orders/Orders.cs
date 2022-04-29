@@ -1,14 +1,23 @@
 using System.Diagnostics;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
 using Newtonsoft.Json.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddApplicationInsightsTelemetry();
+
 var app = builder.Build();
 
 var config = app.Configuration;
 
 var warehouseClient = new HttpClient();
+
+app.Use(async (context, next) => {
+    if (context.Features.Get<RequestTelemetry>() is null) throw new Exception("RequestTelemetry Feature is missing. Did you forget to setup App Insights?");
+    await next();
+});
 
 app.MapGet("/orders/", () => "This is ORDERS service");
 app.MapGet("/", () => "This is ORDERS service");

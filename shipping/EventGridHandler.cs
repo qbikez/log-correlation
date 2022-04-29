@@ -38,7 +38,7 @@ class EventGridHandler
 
         if (validationEvent != null)
         {
-            await InActivityContext(context, validationEvent, async() =>
+            await InActivityContext(context, validationEvent, async () =>
             {
                 var result = HandleValidation(validationEvent);
 
@@ -63,12 +63,13 @@ class EventGridHandler
         activity.Start();
 
         var requestTelemetry = context.Features.Get<RequestTelemetry>();
-        if (requestTelemetry is null) throw new NullReferenceException("request telemetry is null. Did you configure app insights?")
-        
+        if (requestTelemetry is null) throw new NullReferenceException("request telemetry is null. Did you forget to configure app insights?");
+
+
         var operation = requestTelemetry.Context.Operation;
         requestTelemetry.Name = operation.Name;
         requestTelemetry.Id = activity.SpanId.ToHexString();
-        
+
         operation.Name = activity.OperationName;
         operation.Id = activity.TraceId.ToHexString();
         operation.ParentId = activity.ParentSpanId.ToHexString();
