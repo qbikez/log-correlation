@@ -36,6 +36,8 @@ app.Use(async (context, next) =>
 
     });
 
+app.MapGet("/", () => "This is SHIPPING service");
+
 app.MapPost("/events", async (HttpContext context, ILoggerFactory loggerFactory) =>
     {
         var handler = new EventGridHandler(logger);

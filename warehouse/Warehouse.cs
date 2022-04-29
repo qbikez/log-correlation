@@ -12,6 +12,8 @@ var app = builder.Build();
 var _logger = app.Logger;
 var config = app.Configuration;
 
+app.MapGet("/", () => "This is WAREHOUSE service");
+
 app.MapGet("/items", async (HttpRequest request) =>
 {
     foreach (var header in request.Headers)

@@ -7,7 +7,7 @@
     "start:orders": "dotnet watch --project orders run",
     "start:warehouse": "dotnet watch --project warehouse run",
     "start:shipping": "dotnet watch --project shipping run",
-    "start": "concurrently -n orders,warehouse,shipping -c green,blue,magenta --kill-others --prefix \"[{name}-{pid}]\" --prefixLength 16 \"npm run start:orders\" \"npm run start:warehouse\" \"npm run start:shipping\"",
+    "start": "concurrently -k -n orders,warehouse,shipping -c green,blue,magenta --kill-others --prefix \"[{name}-{pid}]\" --prefixLength 16 \"npm run start:orders\" \"npm run start:warehouse\" \"npm run start:shipping\"",
     "start:ngrok": "ngrok http -host-header=localhost 5003"
   },
   "repository": {

@@ -10,7 +10,7 @@ var config = app.Configuration;
 
 var warehouseClient = new HttpClient();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => "This is ORDERS service");
 
 app.MapPost("/orders/", async (Order order) =>
 {
