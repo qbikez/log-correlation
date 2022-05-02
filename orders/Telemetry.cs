@@ -8,21 +8,23 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 public class EventGridDependencyInitializer : ITelemetryInitializer
 {
-    public const string NextSpanIdProperty = "next_spanId";
+    public const string EventTraceparentKey = "event_traceparent";
     public EventGridDependencyInitializer() { }
     public void Initialize(ITelemetry telemetry)
     {
         if (telemetry is DependencyTelemetry dependency)
         {
             var activity = Activity.Current!;
-            var id = activity.GetBaggageItem(NextSpanIdProperty);
+            var id = activity.GetBaggageItem(EventTraceparentKey);
             if (!string.IsNullOrEmpty(id))
             {
-                dependency.Id = id;
+                // the SpanId in request's traceparent becomes parent of the request
+                // this will make AppInsights think that handler request is child of this dependency call
+                dependency.Id = ActivityContext.Parse(id, null).SpanId.ToString();
+                // "Azure Service Bus" is nicely interpreted in AppInsights graph
                 dependency.Type = "Azure Service Bus";
             }
         }
-
     }
 }
 
@@ -33,12 +35,11 @@ public static class ActivityExtensions
         if (activity?.SpanId == null || activity?.Id == null) return null;
 
         var nextSpanId = ActivitySpanId.CreateRandom().ToHexString();
-        activity.AddBaggage(EventGridDependencyInitializer.NextSpanIdProperty, nextSpanId);
-
         var currentSpanId = activity.SpanId.ToHexString();
         var traceparent = activity.Id.Replace(currentSpanId, nextSpanId);
 
-        activity.AddBaggage("traceparent", traceparent);
+        activity.AddBaggage(EventGridDependencyInitializer.EventTraceparentKey, traceparent);
+        activity.AddBaggage("orignalspanid", currentSpanId);
 
         return traceparent;
     }
