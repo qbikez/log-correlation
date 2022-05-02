@@ -34,3 +34,14 @@ sequenceDiagram
     Note over shipping: [ItemShipped]
 ```
 
+# Notes
+
+When searching app insights for operation id, the first app in chain (orders) shows only event grid dependency.
+
+![orders-timeline.png](orders-timeline.png)
+
+The shipping app shows event handler call, as well as the source request to orders.
+
+![shipping-timeline.png](shipping-timeline.png)
+
+
