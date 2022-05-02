@@ -3,6 +3,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.EventGrid;
 using Microsoft.Azure.EventGrid.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,8 +16,10 @@ var app = builder.Build();
 var config = app.Configuration;
 
 var warehouseClient = new HttpClient();
+var serviceBus = new ServiceBus(Options.Create(config.GetSection("ServiceBus").Get<ServiceBusSettings>()!));
 
-app.Use(async (context, next) => {
+app.Use(async (context, next) =>
+{
     if (context.Features.Get<RequestTelemetry>() is null) throw new Exception("RequestTelemetry Feature is missing. Did you forget to setup App Insights?");
     await next();
 });
@@ -33,6 +36,8 @@ app.MapPost("/orders/", async (Order order) =>
 
     var response = await warehouseClient.GetAsync("https://localhost:5002/items/");
     System.Console.WriteLine(config["EventGrid:Hostname"]);
+
+    var handler = new HttpClientHandler();
 
     using var eventGrid = new EventGridClient(new TopicCredentials(config["EventGrid:Key"]));
 

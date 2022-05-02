@@ -4,3 +4,4 @@ appsettings.Development.json
 .vs/
 **/*.user
 node_modules/
+secrets.json

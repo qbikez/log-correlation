@@ -27,7 +27,7 @@ i.e.:
 -filter "data.metadataKeys StringContains development"
 #>
 param(
-    $url,
+    $url="http://localhost:5003/shipping/events",
     $resourceGroup,
     $domain,
     $topic,
