@@ -88,7 +88,6 @@ public class ServiceBus : IServiceBus
         }
     }
 }
-}
 
 public static class ServiceBusExtensions
 {
@@ -128,3 +127,4 @@ public static class ServiceBusExtensions
             yield return msg;
         }
     }
+}

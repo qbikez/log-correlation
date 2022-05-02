@@ -28,7 +28,7 @@ app.MapGet("/orders/", () => "This is ORDERS service");
 app.MapGet("/", () => "This is ORDERS service");
 app.MapGet("/orders/echo", () => "This is ORDERS echo");
 
-app.MapPost("/orders/", async (Order order) =>
+app.MapPost("/orders/", async (HttpRequest request, Order order) =>
 {
     order.Id = Guid.NewGuid();
 
@@ -63,6 +63,27 @@ app.MapPost("/orders/", async (Order order) =>
             Subject = $"orders/{order.Id}",
             DataVersion = "1.0.1"
         }
+    });
+
+    request.Headers.TryGetValue("correlation-id", out var correlationId);
+    await serviceBus.Send(new Azure.Messaging.ServiceBus.ServiceBusMessage()
+    {
+        Subject = "Order",
+        CorrelationId = correlationId.ToString(),
+        Body = BinaryData.FromObjectAsJson(new
+        {
+            Order = order,
+            traceparent = activity.TraceParent(),
+            Activity = new
+            {
+                activity.RootId,
+                activity.Id,
+                activity.ParentId,
+                activity.ParentSpanId,
+                activity.SpanId,
+                activity.TraceId,
+            }
+        }),
     });
 
     return order;
