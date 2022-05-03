@@ -137,7 +137,8 @@ try {
         "create"
         "--name", $name
         "--source-resource-id", $egd
-        "--endpoint", $webhookUrl
+        "--endpoint", $webhookUrl,
+        "--delivery-attribute-mapping", "traceparent", "dynamic", "data.traceparent"
     )
     if ($eventTypes) {
         $azArgs += @(

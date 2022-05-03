@@ -40,8 +40,8 @@ app.MapPost("/orders/", async (HttpRequest request, Order order) =>
     var handler = new HttpClientHandler();
 
     using var eventGrid = new EventGridClient(new TopicCredentials(config["EventGrid:Key"]));
-
-    var activity = Activity.Current!;
+    //using var activity = new Activity("event.send").Start();
+    var activity = Activity.Current;
 
     await eventGrid.PublishEventsAsync(config["EventGrid:Hostname"], new[] {
         new EventGridEvent {

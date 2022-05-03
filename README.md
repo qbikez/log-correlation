@@ -45,3 +45,15 @@ The shipping app shows event handler call, as well as the source request to orde
 ![shipping-timeline.png](shipping-timeline.png)
 
 
+Events + serviceBus
+![shipping-timeline-events+bus.png](shipping-timeline-events+bus.png)
+
+
+
+https://devblogs.microsoft.com/cse/2021/05/13/observability-for-event-stream-processing-with-azure-functions-event-hubs-and-application-insights/
+
+## operation links
+
+[populationg operation links](https://github.com/microsoft/ApplicationInsights-dotnet/blob/405fd6a9916956f2233520c8ab66110a1f9dcfbc/WEB/Src/DependencyCollector/DependencyCollector/Implementation/AzureSdk/AzureSdkDiagnosticsEventHandler.cs#L355)
+
+[a bug?](https://github.com/Azure/azure-sdk-for-net/issues/18002)

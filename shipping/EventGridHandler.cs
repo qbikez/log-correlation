@@ -52,7 +52,8 @@ class EventGridHandler
         foreach (EventGridEvent eventGridEvent in eventGridEvents)
         {
             log.LogDebug($"outside activity context: {requestContent}");
-            await InActivityContext(context, eventGridEvent, () => callback(eventGridEvent));
+            //await InActivityContext(context, eventGridEvent, () => callback(eventGridEvent));
+            await callback(eventGridEvent);
         }
 
         context.Response.StatusCode = 202;
